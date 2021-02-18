@@ -2,7 +2,6 @@ package AI;
 
 import AI.Components.Node;
 import AI.Math.MathFunctions;
-
 import java.util.ArrayList;
 
 public class AiBuilder {

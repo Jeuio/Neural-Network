@@ -9,7 +9,7 @@ import java.io.IOException;
 public class PictureToData {
 
     //Static method that uses a picture to extract data
-    public static float[] picuteToData(BufferedImage image) {
+    public static float[] pictureToData(BufferedImage image) {
         float[] data = new float[image.getWidth() * image.getHeight()];
         //Iterates through all pixels in the image
         for (int i = 0; i < image.getWidth(); i++) {
@@ -22,7 +22,7 @@ public class PictureToData {
     }
 
     //Static method that uses a file to extract data
-    public static float[] picuteToData(File file) throws IOException {
+    public static float[] pictureToData(File file) throws IOException {
         BufferedImage image = ImageIO.read(file);
         float[] data = new float[image.getWidth() * image.getHeight()];
         //Iterates through all pixels in the image
@@ -36,7 +36,7 @@ public class PictureToData {
     }
 
     //Static method that uses a filepath to extract data
-    public static float[] picuteToData(String filepath) throws IOException {
+    public static float[] pictureToData(String filepath) throws IOException {
         BufferedImage image = ImageIO.read(new File(filepath));
         float[] data = new float[image.getWidth() * image.getHeight()];
         //Iterates through all pixels in the image
