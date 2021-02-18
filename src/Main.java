@@ -2,11 +2,12 @@ import AI.AiBuilder;
 import AI.SquishificationFunction;
 import AI.PictureToData;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
 
         AiBuilder builder = new AiBuilder(3, 256, 20, 10);
         builder.setSquishificationFunction(SquishificationFunction.RELU);
