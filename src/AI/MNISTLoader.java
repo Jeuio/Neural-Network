@@ -6,21 +6,36 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class MNISTLoader {
-    private ArrayList<Integer> data = new ArrayList<>();
+    private ArrayList<int[]> data = new ArrayList<>();
 
-    public void extractor() throws FileNotFoundException {
-        String inputPath = "src\\Database\\mnist_train.csv";
+    //Extracts the data of the MNIST database
+    public void extract() throws FileNotFoundException {
+        String inputPath = "src\\AI\\Database\\mnist_train.csv"; //Location of the csv file
+        ArrayList<Integer> integers = new ArrayList<>();
         Scanner scanner = new Scanner(new File(inputPath));
         while (scanner.hasNext()) {
             String[] content = scanner.next().split(",");
             for (String s :
                     content) {
-                data.add(Integer.parseInt(s));
+                integers.add(Integer.parseInt(s));
+            }
+        }
+
+        //Creates a new entry in data for each 785 entries in the list
+        int[] intArray = new int[785];
+        int currentIndex = 0;
+        for (int i:
+                integers) {
+            intArray[currentIndex] = i;
+            currentIndex++;
+            if (currentIndex == 785) {
+                currentIndex = 0;
+                data.add(intArray);
             }
         }
     }
 
-    public ArrayList<Integer> getData() {
-        return data;
+    public ArrayList<int[]> getData() {
+        return this.data;
     }
 }
