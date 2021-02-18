@@ -9,7 +9,7 @@ public class MNISTLoader {
     private ArrayList<Integer> data = new ArrayList<>();
 
     public void extractor() throws FileNotFoundException {
-        String inputPath = "src\\TrainImages\\mnist_train.csv";
+        String inputPath = "src\\Database\\mnist_train.csv";
         Scanner scanner = new Scanner(new File(inputPath));
         while (scanner.hasNext()) {
             String[] content = scanner.next().split(",");
