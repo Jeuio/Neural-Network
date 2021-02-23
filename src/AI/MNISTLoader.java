@@ -8,7 +8,10 @@ import java.util.Scanner;
 public class MNISTLoader {
     private ArrayList<int[]> data = new ArrayList<>();
 
-    //Extracts the data of the MNIST database
+    /**
+     * Method to extract all the data from the database
+     * @throws FileNotFoundException
+     */
     public void extract() throws FileNotFoundException {
         String inputPath = "src\\AI\\Database\\mnist_train.csv"; //Location of the csv file
         ArrayList<Integer> integers = new ArrayList<>();

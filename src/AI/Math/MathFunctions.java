@@ -8,11 +8,19 @@ public class MathFunctions {
         return Math.max(0, value);
     }
 
-    public static float leakyRelu(float value, float alpha) {
-        if (value > 0) {
-            return value;
-        } else {
-            return alpha * value;
+    public static float leakyRelu(float value, float alpha, boolean derivative) {
+        if (!derivative) {
+            if (value > 0) {
+                return value;
+            } else {
+                return alpha * value;
+            }
+        } else { //Return the derivative
+            if (value >= 0) {
+                return 1;
+            } else {
+                return Math.abs(alpha);
+            }
         }
     }
 }
