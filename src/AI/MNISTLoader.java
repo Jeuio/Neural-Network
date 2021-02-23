@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class MNISTLoader {
-    private ArrayList<int[]> data = new ArrayList<>();
+    private ArrayList<float[]> data = new ArrayList<>();
+    private ArrayList<float[]> labels = new ArrayList<>();
 
     /**
      * Method to extract all the data from the database
+     *
      * @throws FileNotFoundException
      */
     public void extract() throws FileNotFoundException {
@@ -24,12 +26,19 @@ public class MNISTLoader {
             }
         }
 
-        //Creates a new entry in data for each 785 entries in the list
-        int[] intArray = new int[785];
+        //Creates a new entry in data for each 784 entries in the list
+        float[] intArray = new float[784];
         int currentIndex = 0;
-        for (int i:
+        for (int i :
                 integers) {
-            intArray[currentIndex] = i;
+            if (currentIndex == 0) {
+                float[] label = new float[10];
+                System.out.println(i);
+                label[i] = 1;
+                labels.add(label);
+            } else {
+                intArray[currentIndex - 1] = i;
+            }
             currentIndex++;
             if (currentIndex == 785) {
                 currentIndex = 0;
@@ -38,7 +47,11 @@ public class MNISTLoader {
         }
     }
 
-    public ArrayList<int[]> getData() {
+    public ArrayList<float[]> getData() {
         return this.data;
+    }
+
+    public ArrayList<float[]> getLabels() {
+        return labels;
     }
 }
