@@ -11,7 +11,6 @@ public class MNISTLoader {
 
     /**
      * Method to extract all the data from the database
-     *
      * @throws FileNotFoundException
      */
     public void extract() throws FileNotFoundException {
@@ -25,24 +24,24 @@ public class MNISTLoader {
                 integers.add(Integer.parseInt(s));
             }
         }
+        scanner.close();
 
-        //Creates a new entry in data for each 784 entries in the list
-        float[] intArray = new float[784];
+        //Creates a new entry in data for each 785 entries in the list
+        float[] floatArray = new float[784];
         int currentIndex = 0;
         for (int i :
                 integers) {
             if (currentIndex == 0) {
                 float[] label = new float[10];
-                System.out.println(i);
                 label[i] = 1;
                 labels.add(label);
             } else {
-                intArray[currentIndex - 1] = i;
+                floatArray[currentIndex - 1] = 1.0f / 255.0f * (float)i;
             }
             currentIndex++;
             if (currentIndex == 785) {
                 currentIndex = 0;
-                data.add(intArray);
+                data.add(floatArray);
             }
         }
     }

@@ -12,14 +12,15 @@ public class AiBuilder {
     private Node[] inputLayer; //Array of all nodes in the input layer
     private Node[] outputLayer; //Array of all nodes in the output layer
     private float learningRate; //Learning rate of the network
+    private boolean useBias;
 
     /**
      * Constructor to create a neural network
-     *
      * @param layers     amount of layer the network should have
      * @param parameters the amount of nodes the layers should have. Size of this parameter has to be equal to the size of the layers
      */
-    public AiBuilder(int layers, int... parameters) {
+    public AiBuilder(int layers, boolean useBias, int... parameters) {
+        this.useBias = useBias;
         for (byte i = 0; i < layers; i++) { //Creates nodes for all the layers specified in "layers"
             Node[] n = new Node[parameters[i]];
             for (int j = 0; j < n.length; j++) { //Creates the right amount of nodes for the number specified in "parameters"
@@ -34,7 +35,9 @@ public class AiBuilder {
                     newNode.setWeights(weights); //Add the weight array to the node
                 }
 
-                newNode.setBias((float) (Math.random() * 2 - 1)); //Assigns a random bias to the node
+                if (this.useBias) {
+                    newNode.setBias((float) (Math.random() * 2  - 1)); //Assigns a random bias to the node
+                }
                 n[j] = newNode; //Adds the new node to the node array
             }
             this.nodes.add(n); //Adds the node array to the layer list
@@ -55,7 +58,6 @@ public class AiBuilder {
 
     /**
      * Recursive method to connect all the nodes together
-     *
      * @param n the node all nodes in the previous layer should be linked to
      */
     private void link(Node n) {
@@ -70,7 +72,6 @@ public class AiBuilder {
 
     /**
      * Assigns values to the input layer nodes
-     *
      * @param values an array of values to be assigned
      */
     public void assignValues(float[] values) {
@@ -88,13 +89,12 @@ public class AiBuilder {
     public void calculateValues() {
         for (Node node :
                 outputLayer) {
-            propagate(node);
+            node.setValue(propagate(node));
         }
     }
 
     /**
      * Recursive method to propagate all the values through the network
-     *
      * @param node the node the values are propagated from
      * @return the activation of the node
      */
@@ -103,7 +103,12 @@ public class AiBuilder {
             float value = 0;
             float[] weights = node.getWeights(); //Array of all the weights connected to the node
             for (int i = 0; i < node.getInputNodes().length; i++) { //Iterate through all the input nodes of the node
-                value += propagate(node.getInputNodes()[i]) * weights[i] + node.getInputNodes()[i].getBias(); //Calculate the activation of the node
+                if (this.useBias) {
+                    value += propagate(node.getInputNodes()[i]) * weights[i] + node.getInputNodes()[i].getBias(); //Calculate the activation of the node
+                } else {
+                    value += propagate(node.getInputNodes()[i]) * weights[i];
+                    //System.out.println(value);
+                }
             }
             if (this.squishificationFunction == SquishificationFunction.RELU) {
                 value = MathFunctions.relu(value);
@@ -115,19 +120,32 @@ public class AiBuilder {
         return node.getValue();
     }
 
+    /**
+     * Method that lets the network learn
+     * @param data an array of data to learn
+     * @param expectedOutput the expected output for each data segment
+     */
     public void learn(ArrayList<float[]> data, ArrayList<float[]> expectedOutput) {
         for (int i = 0; i < data.size(); i++) {
             assignValues(data.get(i));
             calculateValues();
-            calculateCostForNodes(nodes.size() - 1, expectedOutput.get(i));
+            calculateCostForNodes(this.nodes.size() - 1, expectedOutput.get(i));
+            printCost();
             backpropagate(0);
         }
+    }
 
+    private void printCost() {
+        float sumOfCost = 0;
+        for (Node node:
+             outputLayer) {
+            sumOfCost += node.getCost();
+        }
+        System.out.println("Network Cost: " + sumOfCost);
     }
 
     /**
      * Recursive function that applies the backpropagation algorithm
-     *
      * @param layer the layer the weights are adjusted at. Starting value is 0
      * @implNote calculateCostForNodes has to be called to update the cost of the nodes
      */
@@ -136,8 +154,8 @@ public class AiBuilder {
                 nodes.get(layer)) {
             for (int i = 0; i < nodes.get(layer + 1).length; i++) { //Iterated through all nodes of the subsequent layer
                 float[] weights = this.nodes.get(layer + 1)[i].getWeights(); //Weights connected to the node
-                System.out.println(nodes.get(layer + 1)[i].getCost());
-                weights[i] -= learningRate * weights[i] * nodes.get(layer + 1)[i].getCost(); //Adjusts the weight at that point
+                System.out.println(learningRate * nodes.get(layer + 1)[i].getCost());
+                weights[i] -= learningRate * nodes.get(layer + 1)[i].getCost(); //Adjusts the weight at that point
             }
         }
         if (layer < nodes.size() - 2) { //Checks whether the output layer has been reached
@@ -147,7 +165,6 @@ public class AiBuilder {
 
     /**
      * Method that calculates the cost of the output layer nodes
-     *
      * @param layer          the layer of which the cost of the nodes is calculated
      * @param expectedOutput an array of the expected output. Size has to match the number of output nodes
      */
@@ -163,7 +180,6 @@ public class AiBuilder {
 
     /**
      * Recursive methos that calculate the cost of nodes in a specified layer
-     *
      * @param layer the layer of which the cost of the nodes is calculated
      */
     private void calculateCostForNodes(int layer) {
@@ -183,7 +199,6 @@ public class AiBuilder {
 
     /**
      * Methos that return the values of the output layer activation
-     *
      * @return the values of the output layer activation
      */
     public float[] getOutputLayerValues() {
@@ -196,7 +211,6 @@ public class AiBuilder {
 
     /**
      * Method that return the "squishifiaction" function of the network
-     *
      * @return the "squishification" function the network is using
      */
     public SquishificationFunction getSquishificationFunction() {
@@ -205,7 +219,6 @@ public class AiBuilder {
 
     /**
      * Method that sets the "squishification" function of the network
-     *
      * @param squishificationFunction the "squishification" function the neural network should use
      */
     public void setSquishificationFunction(SquishificationFunction squishificationFunction) {
@@ -214,7 +227,6 @@ public class AiBuilder {
 
     /**
      * Sets the learning rate of the network.
-     *
      * @param learningRage the learning rate the network should use. Too high values can result in the network overshooting its gradient in the cost function. Too low values can result in a too small learning effect.
      */
     public void setLearningRate(float learningRage) {

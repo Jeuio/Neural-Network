@@ -23,4 +23,8 @@ public class MathFunctions {
             }
         }
     }
+
+    public static float sigmoid(float value, boolean derivative) {
+        return 0;
+    }
 }
