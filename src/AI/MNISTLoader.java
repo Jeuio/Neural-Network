@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Scanner;
 
 public class MNISTLoader {
-    private ArrayList<float[]> data = new ArrayList<>();
-    private ArrayList<float[]> labels = new ArrayList<>();
+    private ArrayList<double[]> data = new ArrayList<>();
+    private ArrayList<double[]> labels = new ArrayList<>();
 
     /**
      * Method to extract all the data from the database
@@ -27,30 +27,30 @@ public class MNISTLoader {
         scanner.close();
 
         //Creates a new entry in data for each 785 entries in the list
-        float[] floatArray = new float[784];
+        double[] doubleArray = new double[784];
         int currentIndex = 0;
         for (int i :
                 integers) {
             if (currentIndex == 0) {
-                float[] label = new float[10];
+                double[] label = new double[10];
                 label[i] = 1;
                 labels.add(label);
             } else {
-                floatArray[currentIndex - 1] = 1.0f / 255.0f * (float)i;
+                doubleArray[currentIndex - 1] = 1.0f / 255.0f * (double)i;
             }
             currentIndex++;
             if (currentIndex == 785) {
                 currentIndex = 0;
-                data.add(floatArray);
+                data.add(doubleArray);
             }
         }
     }
 
-    public ArrayList<float[]> getData() {
+    public ArrayList<double[]> getData() {
         return this.data;
     }
 
-    public ArrayList<float[]> getLabels() {
+    public ArrayList<double[]> getLabels() {
         return labels;
     }
 }

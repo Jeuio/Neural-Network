@@ -1,5 +1,5 @@
 package AI;
 
 public enum SquishificationFunction {
-    RELU, LEAKYRELU;
+    RELU, LEAKYRELU, SIGMOID;
 }

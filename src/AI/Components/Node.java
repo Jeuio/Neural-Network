@@ -2,36 +2,36 @@ package AI.Components;
 
 public class Node {
 
-    private float[] weights;
-    private float value = 0;
-    private float bias = 0;
+    private double[] weights;
+    private double value = 0;
+    private double bias = 0;
     private byte layerPosition = 0;
     private Node[] inputNodes;
-    private float cost = 0;
+    private double cost = 0;
 
     //Getter and setter for all variables
 
-    public float[] getWeights() {
+    public double[] getWeights() {
         return weights;
     }
 
-    public void setWeights(float[] weights) {
+    public void setWeights(double[] weights) {
         this.weights = weights;
     }
 
-    public float getValue() {
+    public double getValue() {
         return value;
     }
 
-    public void setValue(float value) {
+    public void setValue(double value) {
         this.value = value;
     }
 
-    public float getBias() {
+    public double getBias() {
         return bias;
     }
 
-    public void setBias(float bias) {
+    public void setBias(double bias) {
         this.bias = bias;
     }
 
@@ -51,11 +51,11 @@ public class Node {
         this.inputNodes = node;
     }
 
-    public float getCost() {
+    public double getCost() {
         return cost;
     }
 
-    public void setCost(float cost) {
+    public void setCost(double cost) {
         this.cost = cost;
     }
 }

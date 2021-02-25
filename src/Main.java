@@ -7,12 +7,12 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
 
-        AiBuilder builder = new AiBuilder(3, false, 784, 20, 10);
-        builder.setSquishificationFunction(SquishificationFunction.RELU);
-        builder.setLearningRate((float) 0.1);
+        AiBuilder builder = new AiBuilder(3, true, 784, 100, 10);
+        builder.setSquishificationFunction(SquishificationFunction.SIGMOID);
+        builder.setLearningRate((float) 0.0001);
         builder.build();
         MNISTLoader loader = new MNISTLoader();
         loader.extract();
-        builder.learn(loader.getData(), loader.getLabels());
+        builder.learn(1000, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
     }
 }

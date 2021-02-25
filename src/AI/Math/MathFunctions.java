@@ -1,14 +1,13 @@
 package AI.Math;
-
 public class MathFunctions {
 
     //Functions to refine the values of nodes (https://ml-cheatsheet.readthedocs.io/en/latest/activation_functions.html#id10)
 
-    public static float relu(float value) {
+    public static double relu(double value) {
         return Math.max(0, value);
     }
 
-    public static float leakyRelu(float value, float alpha, boolean derivative) {
+    public static double leakyRelu(double value, double alpha, boolean derivative) {
         if (!derivative) {
             if (value > 0) {
                 return value;
@@ -24,7 +23,11 @@ public class MathFunctions {
         }
     }
 
-    public static float sigmoid(float value, boolean derivative) {
-        return 0;
+    public static double sigmoid(double value, boolean derivative) {
+        if (!derivative) {
+            return (1d / (1 + Math.pow(Math.E, (-value))));
+        } else {
+            return sigmoid(value, false) * (1 - sigmoid(value, false));
+        }
     }
 }
