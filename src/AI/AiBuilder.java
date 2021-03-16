@@ -1,6 +1,11 @@
 package AI;
 
+import AI.Components.Bias;
+import AI.Components.Layer;
 import AI.Components.Node;
+import AI.Components.Weight;
+import AI.Cost.CostFunction;
+import AI.Cost.CostFunctions;
 import AI.Math.MathFunctions;
 
 import java.io.File;
@@ -14,52 +19,44 @@ import java.util.Scanner;
 
 public class AiBuilder {
 
-    private SquishificationFunction squishificationFunction; //Specifies the function used to refine the values of the Nodes
-    private ArrayList<Node[]> nodes = new ArrayList<>(); //List for all node arrays
-    private Node[] inputLayer; //Array of all nodes in the input layer
-    private Node[] outputLayer; //Array of all nodes in the output layer
+    private Layer inputLayer; //Array of all nodes in the input layer
+    private Layer outputLayer; //Array of all nodes in the output layer
     private double learningRate; //Learning rate of the network
-    private boolean useBias;
-
-    /**
-     * Constructor to create a neural network
-     *
-     * @param layers     amount of layer the network should have
-     * @param parameters the amount of nodes the layers should have. Size of this parameter has to be equal to the size of the layers
-     */
-    public AiBuilder(int layers, boolean useBias, int... parameters) {
-        this.useBias = useBias;
-        for (byte i = 0; i < layers; i++) { //Creates nodes for all the layers specified in "layers"
-            Node[] n = new Node[parameters[i]];
-            for (int j = 0; j < n.length; j++) { //Creates the right amount of nodes for the number specified in "parameters"
-                Node newNode = new Node(); //Creates a new object of the Node class
-                newNode.setLayerPosition(i); //Sets the layer position to the right value
-
-                if (i > 0) { //Check whether the the node is in the input layer
-                    double[] weights = new double[nodes.get(i - 1).length]; //Create an array with the size of the amount of nodes in the previous layer
-                    for (int k = 0; k < weights.length; k++) {
-                        weights[k] = randomValue(-Math.sqrt(this.nodes.get(this.nodes.size() - 1).length), Math.sqrt(this.nodes.get(this.nodes.size() - 1).length)); //Generate a random weight
-                    }
-                    newNode.setWeights(weights); //Add the weight array to the node
-                }
-
-                if (this.useBias && i > 0) {
-                    newNode.setBias(randomValue(-Math.sqrt(this.nodes.get(this.nodes.size() - 1).length), Math.sqrt(this.nodes.get(this.nodes.size() - 1).length))); //Assigns a random bias to the node
-                }
-                n[j] = newNode; //Adds the new node to the node array
-            }
-            this.nodes.add(n); //Adds the node array to the layer list
-        }
-        inputLayer = this.nodes.get(0); //Assigns the first layer to "inputLayer"
-        outputLayer = this.nodes.get(this.nodes.size() - 1); //Assigns the last Layer to "outputLayer"
-    }
+    private boolean useBias = true;
+    private CostFunctions costFunction;
+    private ArrayList<Layer> layers = new ArrayList<>();
 
     /**
      * Links all the nodes in the network by calling the link method
      */
     public void build() {
+        for (byte i = 0; i < this.layers.size(); i++) { //Creates nodes for all the layers specified in "layers"
+            Node[] nodeArray = new Node[this.layers.get(i).getLayerSize()];
+            for (int j = 0; j < nodeArray.length; j++) { //Creates the right amount of nodes for the number specified in "parameters"
+                Node newNode = new Node(); //Creates a new object of the Node class
+                newNode.setLayerPosition(i); //Sets the layer position to the right value
+                newNode.setIndexInLayer(j);
+
+                if (i > 0) { //Check whether the the node is in the input layer
+                    Weight[] weights = new Weight[this.layers.get(i - 1).getLayerSize()]; //Create an array with the size of the amount of nodes in the previous layer
+                    for (int k = 0; k < weights.length; k++) {
+                        weights[k] = new Weight(randomValue(-Math.sqrt(this.layers.get(i - 1).getLayerSize()), Math.sqrt(this.layers.get(i - 1).getLayerSize()))); //Generate a random weight
+                    }
+                    newNode.setWeights(weights); //Add the weight array to the node
+                }
+
+                if (this.useBias && i > 0) {
+                    newNode.setBias(new Bias(randomValue(-Math.sqrt(this.layers.get(i - 1).getLayerSize()), Math.sqrt(this.layers.get(i - 1).getLayerSize())))); //Assigns a random bias to the node
+                }
+                nodeArray[j] = newNode; //Adds the new node to the node array
+            }
+            this.layers.get(i).setNodes(nodeArray); //Adds the node array to the layer list
+        }
+        inputLayer = this.layers.get(0); //Assigns the first layer to "inputLayer"
+        outputLayer = this.layers.get(this.layers.size() - 1); //Assigns the last Layer to "outputLayer"
+
         for (Node node : //Goes through all nodes in the output layer
-                outputLayer) {
+                outputLayer.getNodes()) {
             link(node);
         }
     }
@@ -71,9 +68,9 @@ public class AiBuilder {
      */
     private void link(Node n) {
         if (n.getLayerPosition() > 0) { //Check whether the node is in the first layer (no input nodes can be specified in that case)
-            n.setInputNodes(this.nodes.get(n.getLayerPosition() - 1)); //Assigns all the nodes from the previous layer as input nodes
+            n.setInputNodes(this.layers.get(n.getLayerPosition() - 1).getNodes()); //Assigns all the nodes from the previous layer as input nodes
             for (Node node : //Does the same for all nodes in the previous layer
-                    this.nodes.get(n.getLayerPosition() - 1)) {
+                    this.layers.get(n.getLayerPosition() - 1).getNodes()) {
                 link(node);
             }
         }
@@ -85,11 +82,11 @@ public class AiBuilder {
      * @param values an array of values to be assigned
      */
     public void assignValues(double[] values) {
-        if (values.length != inputLayer.length) { //Checks whether the length of the values array is equal to the amount of nodes in the input layer and throws an exception otherwise
+        if (values.length != this.layers.get(0).getLayerSize()) { //Checks whether the length of the values array is equal to the amount of nodes in the input layer and throws an exception otherwise
             throw new IllegalArgumentException();
         }
         for (int i = 0; i < values.length; i++) {
-            inputLayer[i].setValue(values[i]); //Assign the value of the value array to the nodes
+            inputLayer.getNodes()[i].setValue(values[i]); //Assign the value of the value array to the nodes
         }
     }
 
@@ -98,8 +95,8 @@ public class AiBuilder {
      */
     public void calculateValues() {
         for (Node node :
-                outputLayer) {
-            node.setValue(propagate(node));
+                outputLayer.getNodes()) {
+            propagate(node);
         }
     }
 
@@ -112,23 +109,30 @@ public class AiBuilder {
     private double propagate(Node node) {
         if (node.getLayerPosition() > 0) { //Check whether node is in the input layer
             double value = 0;
-            double[] weights = node.getWeights(); //Array of all the weights connected to the node
-            for (int i = 0; i < this.nodes.get(node.getLayerPosition() - 1).length; i++) { //Iterate through all the input nodes of the node
-                value += propagate(this.nodes.get(node.getLayerPosition() - 1)[i]) * weights[i]; //Calculate the activation of the node
+            Weight[] weights = node.getWeights(); //Array of all the weights connected to the node
+            for (int i = 0; i < node.getInputNodes().length; i++) { //Iterate through all the input nodes of the node
+                value += propagate(node.getInputNodes()[i]) * weights[i].getValue(); //Calculate the activation of the node
             }
             if (this.useBias) {
-                value += node.getBias();
+                value += node.getBias().getValue();
             }
-            if (this.squishificationFunction == SquishificationFunction.RELU) {
+
+            node.setValue(value);
+
+            if (this.layers.get(node.getLayerPosition()).getActivationFunction() == ActivationFunction.RELU) {
                 value = MathFunctions.relu(value);
-            } else if (this.squishificationFunction == SquishificationFunction.LEAKYRELU) {
+            } else if (this.layers.get(node.getLayerPosition()).getActivationFunction() == ActivationFunction.LEAKYRELU) {
                 value = MathFunctions.leakyRelu(value, -0.01, false);
-            } else if (this.squishificationFunction == SquishificationFunction.SIGMOID) {
+            } else if (this.layers.get(node.getLayerPosition()).getActivationFunction() == ActivationFunction.SIGMOID) {
                 value = MathFunctions.sigmoid(value, false);
+            } else if (this.layers.get(node.getLayerPosition()).getActivationFunction() == ActivationFunction.SOFTMAX) {
+                value = MathFunctions.softmax(node.getIndexInLayer(), this.layers.get(node.getLayerPosition()).getNodes(), false);
             }
+
+            node.setActivation(value);
             return value;
         } else {
-            return node.getValue();
+            return node.getActivation();
         }
     }
 
@@ -151,6 +155,10 @@ public class AiBuilder {
                 e.printStackTrace();
             }
         }
+        int totalNodes = 0;
+        for (int i = 1; i < this.layers.size(); i++) {
+            totalNodes += this.layers.get(i).getLayerSize();
+        }
         for (int i = 0; i < epochs; i++) {
             long startTime = System.currentTimeMillis();
             int correctPredictions = 0;
@@ -158,8 +166,10 @@ public class AiBuilder {
             for (int j = 0; j < data.size(); j++) {
                 assignValues(data.get(j));
                 calculateValues();
-                calculateCostForNodes(this.nodes.size() - 1, expectedOutput.get(j));
-                sumOfCost = sumOfCost.add(BigDecimal.valueOf(networkCost()));
+                calculateCostForNodes(outputLayer.getLayerPosition(), expectedOutput.get(j));
+
+                sumOfCost = sumOfCost.add(networkCost());
+
                 int biggestValueIndex = 0;
                 for (int k = 0; k < expectedOutput.get(j).length; k++) {
                     if (expectedOutput.get(j)[k] > expectedOutput.get(j)[biggestValueIndex]) {
@@ -170,17 +180,21 @@ public class AiBuilder {
                     correctPredictions++;
                 }
                 backpropagate(0);
+                applyChanges();
             }
             safeProgress(filePath);
-            System.out.println("Epoch: " + i + "; Average cost of epoch: " + sumOfCost.divide(BigDecimal.valueOf(i + 1), RoundingMode.CEILING) + "; Percentage correct: " + (double)correctPredictions / (double)data.size() * 100 + "%; Calculation time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
+            System.out.println("Epoch: " + i + "; Average cost of epoch: " + sumOfCost.divide(BigDecimal.valueOf(totalNodes), RoundingMode.FLOOR) + "; Percentage correct: " + (double)correctPredictions / (double)data.size() * 100 + "%; Calculation time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
         }
     }
 
-    private double networkCost() {
-        double sumOfCost = 0;
-        for (Node node :
-                this.outputLayer) {
-            sumOfCost += node.getCost();
+    private BigDecimal networkCost() {
+        BigDecimal sumOfCost = new BigDecimal(0);
+        for (int i = 1; i < this.layers.size(); i++) {
+            Layer layer = this.layers.get(i);
+            for (int j = 0; j < layer.getNodes().length; j++) {
+                Node node = layer.getNodes()[j];
+                sumOfCost = sumOfCost.add(BigDecimal.valueOf(node.getCost()));
+            }
         }
         return sumOfCost;
     }
@@ -193,23 +207,40 @@ public class AiBuilder {
     private void safeProgress(String path) {
         try {
             FileWriter writer = new FileWriter(new File(path));
-            for (int layerIndex = 1; layerIndex < this.nodes.size(); layerIndex++) {
-                for (int i = 0; i < this.nodes.get(layerIndex).length; i++) {
-                    double[] weights = this.nodes.get(layerIndex)[i].getWeights();
+            for (int layerIndex = 1; layerIndex < this.layers.size(); layerIndex++) {
+                for (int i = 0; i < this.layers.get(layerIndex).getLayerSize(); i++) {
+                    Weight[] weights = this.layers.get(layerIndex).getNodes()[i].getWeights();
                     for (int j = 0; j < weights.length; j++) {
                         if (j != weights.length - 1) {
-                            writer.write(weights[j] + ","); //Symbol for separating individual weight values
+                            writer.write(weights[j].getValue() + ","); //Symbol for separating individual weight values
                         } else {
-                            writer.write(String.valueOf(weights[j]));
+                            writer.write(String.valueOf(weights[j].getValue()));
                         }
                     }
-                    if (i != this.nodes.get(layerIndex).length - 1) {
+                    if (i != this.layers.get(layerIndex).getLayerSize() - 1) {
                         writer.write(";"); //Symbol for separating weights for nodes
                     } else {
                         writer.write("_"); //Symbol for separating weights for layers
                     }
                 }
             }
+            writer.write("\r\n");
+            if (this.useBias) {
+                for (int layerIndex = 1; layerIndex < this.layers.size(); layerIndex++) {
+                    for (int i = 0; i < this.layers.get(layerIndex).getLayerSize(); i++) {
+                        Node node = this.layers.get(layerIndex).getNodes()[i];
+                        if (i != this.layers.get(layerIndex).getLayerSize() - 1) {
+                            writer.write(node.getBias().getValue() + ",");
+                        } else {
+                            writer.write(String.valueOf(node.getBias().getValue()));
+                        }
+                    }
+                    if (layerIndex != this.layers.size() - 1) {
+                        writer.write(";");
+                    }
+                }
+            }
+
             writer.flush();
             writer.close();
         } catch (IOException e) {
@@ -224,25 +255,40 @@ public class AiBuilder {
      */
     private void readProgress(String path) {
         try {
-            System.out.println("Loading progress from file");
+            System.out.println("Loading progress from file...");
             Scanner scanner = new Scanner(new File(path));
             if (scanner.hasNextLine()) {
                 String weightString = scanner.nextLine();
                 String[] layerWeights = weightString.split("_");
-                for (int i = 1; i < nodes.size(); i++) {
+                for (int i = 1; i < this.layers.size(); i++) {
                     String[] nodeWeights = layerWeights[i - 1].split(";");
                     for (int j = 0; j < nodeWeights.length; j++) {
-                        String[] weights = nodeWeights[j].split(",");
-                        double[] doubleWeights = new double[weights.length];
+                        String[] stringWeights = nodeWeights[j].split(",");
+                        Weight[] weights = new Weight[stringWeights.length];
                         for (int k = 0; k < weights.length; k++) {
-                            doubleWeights[k] = Double.parseDouble(weights[k]);
+                            weights[k] = new Weight(Double.parseDouble(stringWeights[k]));
                         }
-                        nodes.get(i)[j].setWeights(doubleWeights);
+                        this.layers.get(i).getNodes()[j].setWeights(weights);
                     }
                 }
-                System.out.println("Progress loaded");
+                System.out.println("Weights loaded");
             } else {
                 System.out.println("Progress file is empty");
+                return;
+            }
+            if (scanner.hasNextLine()) {
+                String biasString = scanner.nextLine();
+                String[] layerString = biasString.split(";");
+                for (int i = 1; i < this.layers.size(); i++) {
+                    String[] nodeString = layerString[i - 1].split(",");
+                    for (int j = 0; j < this.layers.get(i).getLayerSize(); j++) {
+                        Node node = this.layers.get(i).getNodes()[j];
+                        node.setBias(new Bias(Double.parseDouble(nodeString[j])));
+                    }
+                }
+                System.out.println("Biases loaded");
+            } else {
+                System.out.println("No biases specified in file");
             }
             scanner.close();
         } catch (FileNotFoundException e) {
@@ -252,24 +298,36 @@ public class AiBuilder {
 
     /**
      * Recursive function that applies the backpropagation algorithm
+     * Geht durch alle Nodes in der output layer und berechnet die cost.
+     * Durch jede node der vorherigen layer iterieren:
      *
-     * @param layer the layer the weights are adjusted at. Starting value is 0
+     * error outputlayer = derivat der costfunktion in respect to aktivierung der node in der outputlayer * derivat der aktivierungsfunktion mit dem wert des neurons
+     * error hiddenlayer = eine node nehmen, (die summe der cost der node, mit dem es verbunden ist * wert des weights auf dieser strecke) * derivat der aktivierungsfunktion mit dem wert des neurons
+     *
+     * gradient weight = aktivierung des linken neurons * die cost des rechten neurons
+     * gradient bias = cost des neurons
+     *
+     * Diese werte für jedes weight speichern.
+     * Diese werte nach jeder epoche aktualisieren
+     *
+     * @param layer the layer the weights are adjusted at
      * @implNote calculateCostForNodes has to be called to update the cost of the nodes
      */
     private void backpropagate(int layer) {
-        for (int i = 0; i < nodes.get(layer).length; i++) {
-            Node node = nodes.get(layer)[i];
-            for (int j = 0; j < nodes.get(layer + 1).length; j++) { //Iterated through all nodes of the subsequent layer
-                double[] weights = this.nodes.get(layer + 1)[j].getWeights(); //Weights connected to the node
-                weights[i] -= this.learningRate * node.getValue() * this.nodes.get(layer + 1)[j].getCost(); //Adjusts the weight at that point
-                this.nodes.get(layer + 1)[j].setWeights(weights);
+        if (layer < this.layers.size() - 1) {
+            for (int rightNodeIndex = 0; rightNodeIndex < this.layers.get(layer + 1).getLayerSize(); rightNodeIndex++) {
+                Node rightNode = this.layers.get(layer + 1).getNodes()[rightNodeIndex];
+                Weight[] weights = rightNode.getWeights();
+                for (int leftNodeIndex = 0; leftNodeIndex < this.layers.get(layer).getLayerSize(); leftNodeIndex++) {
+                    Node leftNode = this.layers.get(layer).getNodes()[leftNodeIndex];
+                    weights[leftNodeIndex].addChange(leftNode.getActivation() * rightNode.getCost()); //adding the gradient of the cost function for the weight
+                }
+                rightNode.setWeights(weights);
+                if (this.useBias) {
+                    rightNode.getBias().addChange(rightNode.getCost()); //adding the gradient of the cost function for the bias
+                }
             }
-            if (this.useBias) {
-                node.setBias(node.getBias() - this.learningRate * node.getCost());
-            }
-        }
-        if (layer < nodes.size() - 2) { //Checks whether the output layer has been reached
-            backpropagate(layer + 1); //Calls the method to calculate the values of the next layer
+            backpropagate(layer + 1);
         }
     }
 
@@ -280,11 +338,24 @@ public class AiBuilder {
      * @param expectedOutput an array of the expected output. Size has to match the number of output nodes
      */
     private void calculateCostForNodes(int layer, double[] expectedOutput) {
-        for (int i = 0; i < this.nodes.get(layer).length; i++) { //Iterates through all nodes of the layer
-            Node node = this.nodes.get(layer)[i];
-            node.setCost((node.getValue() - expectedOutput[i]) * node.getValue() * (1 - node.getValue())); //Sets the cost of the node
+        for (int i = 0; i < this.layers.get(layer).getLayerSize(); i++) { //Iterates through all nodes of the layer
+            Node node = this.layers.get(layer).getNodes()[i];
+            double cost;
+
+            if (this.costFunction == CostFunctions.CROSS_ENTROPY) {
+                cost = CostFunction.derivativeCrossEntropy(this.layers.get(layer).getNodes(), expectedOutput)[node.getIndexInLayer()];
+            } else {
+                cost = node.getActivation() - expectedOutput[i];
+            }
+
+            if (this.layers.get(layer).getActivationFunction() == ActivationFunction.SIGMOID) {
+                cost *= MathFunctions.sigmoid(node.getActivation(), true);
+            } else if (this.layers.get(layer).getActivationFunction() == ActivationFunction.SOFTMAX) {
+                cost *= MathFunctions.softmax(node.getIndexInLayer(), this.layers.get(node.getLayerPosition()).getNodes(), true);
+            }
+            node.setCost(cost); //Sets the cost of the node
         }
-        if (layer > 0) { //Checks whether the input layer has been reached
+        if (layer > 1) { //Checks whether the input layer has been reached
             calculateCostForNodes(layer); //Calls the other method to calculate the cost for the other layers
         }
     }
@@ -295,14 +366,20 @@ public class AiBuilder {
      * @param layer the layer of which the cost of the nodes is calculated
      */
     private void calculateCostForNodes(int layer) {
-        for (int i = 0; i < this.nodes.get(layer - 1).length; i++) {
-            Node node = this.nodes.get(layer - 1)[i];
+        for (int i = 0; i < this.layers.get(layer - 1).getLayerSize(); i++) {
+            Node node = this.layers.get(layer - 1).getNodes()[i];
             double sum = 0; //Sum of the cost
-            for (int j = 0; j < nodes.get(layer).length; j++) { //Iterated through all nodes of the layer
-                double[] weights = this.nodes.get(layer)[j].getWeights(); //Weights of the node
-                sum += nodes.get(layer)[j].getCost() * weights[j]; //Adds the cost of the node to the sum
+            for (int j = 0; j < layers.get(layer).getLayerSize(); j++) { //Iterated through all nodes of the layer
+                Weight[] weights = this.layers.get(layer).getNodes()[j].getWeights(); //Weights of the node
+                sum += layers.get(layer).getNodes()[j].getCost() * weights[j].getValue(); //Adds the cost of the node to the sum
             }
-            node.setCost(sum * node.getValue() * (1 - node.getValue())); //Sets the cost of the node
+            double cost = sum;
+            if (this.layers.get(layer - 1).getActivationFunction() == ActivationFunction.SIGMOID) {
+                cost *= MathFunctions.sigmoid(node.getActivation(), true);
+            } else if (this.layers.get(layer - 1).getActivationFunction() == ActivationFunction.SOFTMAX) {
+                cost *= MathFunctions.softmax(node.getIndexInLayer(), this.layers.get(node.getLayerPosition()).getNodes(), true);
+            }
+            node.setCost(cost); //Sets the cost of the node
         }
         if (layer > 2) { //Checks whether the input layer has been reached
             calculateCostForNodes(layer - 1); //Call the method to calculate the cost of the previous layer
@@ -314,16 +391,16 @@ public class AiBuilder {
      *
      * @return the values of the output layer activation
      */
-    public double[] getOutputLayerValues() {
-        double[] values = new double[this.outputLayer.length];
+    public double[] getOutputLayerActivations() {
+        double[] values = new double[this.outputLayer.getLayerSize()];
         for (int i = 0; i < values.length; i++) {
-            values[i] = this.outputLayer[i].getValue();
+            values[i] = this.outputLayer.getNodes()[i].getActivation();
         }
         return values;
     }
 
     public int getDecision() {
-        double[] values = getOutputLayerValues();
+        double[] values = getOutputLayerActivations();
         double biggestValue = -1000;
         int biggestValueIndex = 0;
         for (int i = 0; i < values.length; i++) {
@@ -340,29 +417,45 @@ public class AiBuilder {
     }
 
     /**
-     * Method that return the "squishifiaction" function of the network
-     *
-     * @return the "squishification" function the network is using
-     */
-    public SquishificationFunction getSquishificationFunction() {
-        return squishificationFunction;
-    }
-
-    /**
-     * Method that sets the "squishification" function of the network
-     *
-     * @param squishificationFunction the "squishification" function the neural network should use
-     */
-    public void setSquishificationFunction(SquishificationFunction squishificationFunction) {
-        this.squishificationFunction = squishificationFunction;
-    }
-
-    /**
      * Sets the learning rate of the network.
      *
-     * @param learningRage the learning rate the network should use. Too high values can result in the network adjusting the weight to violently and overshooting its target. Too low values can result in a too small learning effect.
+     * @param learningRate the learning rate the network should use. Too high values can result in the network adjusting the weight to violently and overshooting its target. Too low values can result in a too small learning effect.
      */
-    public void setLearningRate(double learningRage) {
-        this.learningRate = learningRage;
+    public void setLearningRate(double learningRate) {
+        this.learningRate = learningRate;
+    }
+
+    public void addLayer(Layer layer) {
+        this.layers.add(layer);
+    }
+
+    public boolean isUseBias() {
+        return useBias;
+    }
+
+    public void setUseBias(boolean useBias) {
+        this.useBias = useBias;
+    }
+
+    public void applyChanges() {
+        for (int i = 1; i < this.layers.size(); i++) {
+            Layer layer =  this.layers.get(i);
+            for (Node node :
+                    layer.getNodes()) {
+                for (Weight weight :
+                        node.getWeights()) {
+                    weight.applyChanges(this.learningRate);
+                    weight.clearChanges();
+                }
+                if (this.useBias) {
+                    node.getBias().applyChanges(this.learningRate);
+                    node.getBias().clearChanges();
+                }
+            }
+        }
+    }
+
+    public void setCostFunction(CostFunctions costFunction) {
+        this.costFunction = costFunction;
     }
 }
