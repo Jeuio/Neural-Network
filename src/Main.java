@@ -1,6 +1,7 @@
 import AI.AiBuilder;
 import AI.Components.Layer;
 import AI.Cost.CostFunctions;
+import AI.GUI.GUI;
 import AI.LayerType;
 import AI.ActivationFunction;
 import AI.MNISTLoader;
@@ -11,9 +12,10 @@ public class Main {
 
     public static void main(String[] args) throws FileNotFoundException {
 
+        new GUI();
         AiBuilder builder = new AiBuilder();
         Layer inputLayer = new Layer(784, 0, ActivationFunction.NONE, LayerType.INPUT);
-        Layer hiddenLayer = new Layer(32, 1, ActivationFunction.SIGMOID, LayerType.HIDDEN);
+        Layer hiddenLayer = new Layer(200, 1, ActivationFunction.SIGMOID, LayerType.HIDDEN);
         Layer outputLayer = new Layer(10, 2, ActivationFunction.SOFTMAX, LayerType.OUTPUT);
         /*
         Layer inputLayer = new Layer(2, 0, ActivationFunction.NONE, LayerType.INPUT);
@@ -24,7 +26,7 @@ public class Main {
         builder.addLayer(hiddenLayer);
         builder.addLayer(outputLayer);
         builder.setUseBias(true);
-        builder.setLearningRate(0.0001f);
+        builder.setLearningRate(0.01f);
         builder.setCostFunction(CostFunctions.CROSS_ENTROPY);
         builder.build();
 
@@ -53,6 +55,6 @@ public class Main {
         }
         */
 
-        builder.learn(1000, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
+        builder.learn(10, 20, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
     }
 }

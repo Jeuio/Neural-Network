@@ -6,6 +6,8 @@ import AI.Components.Node;
 import AI.Components.Weight;
 import AI.Cost.CostFunction;
 import AI.Cost.CostFunctions;
+import AI.Learning.Minibatch;
+import AI.Learning.MinibatchCreator;
 import AI.Math.MathFunctions;
 
 import java.io.File;
@@ -142,7 +144,12 @@ public class AiBuilder {
      * @param data           an array of data to learn
      * @param expectedOutput the expected output for each data segment
      */
-    public void learn(int epochs, String filePath, ArrayList<double[]> data, ArrayList<double[]> expectedOutput) {
+    public void learn(int epochs, int minibatchsize, String filePath, ArrayList<double[]> data, ArrayList<double[]> expectedOutput) {
+
+        MinibatchCreator minibatchCreator = new MinibatchCreator();
+        minibatchCreator.setData(data);
+        minibatchCreator.setLabels(expectedOutput);
+
         File saveFile = new File(filePath);
         if (saveFile.exists()) {
             readProgress(filePath);
@@ -159,10 +166,42 @@ public class AiBuilder {
         for (int i = 1; i < this.layers.size(); i++) {
             totalNodes += this.layers.get(i).getLayerSize();
         }
+
+
         for (int i = 0; i < epochs; i++) {
+
             long startTime = System.currentTimeMillis();
             int correctPredictions = 0;
             BigDecimal sumOfCost = new BigDecimal(0);
+
+            minibatchCreator.createMiniBatches(minibatchsize);
+            Minibatch[] minibatches = minibatchCreator.getMinibatches();
+            for (int j = 0; j < minibatches.length; j++) {
+                Minibatch minibatch = minibatches[j];
+                for (int k = 0; k < minibatch.getData().size(); k++) {
+                    assignValues(minibatch.getData().get(k));
+                    calculateValues();
+                    calculateCostForNodes(outputLayer.getLayerPosition(), minibatch.getLabels().get(k));
+
+                    sumOfCost = sumOfCost.add(networkCost());
+
+                    int biggestValueIndex = 0;
+                    for (int l = 0; l < minibatch.getLabels().get(k).length; l++) {
+                        if (minibatch.getLabels().get(k)[l] > minibatch.getLabels().get(k)[biggestValueIndex]) {
+                            biggestValueIndex = l;
+                        }
+                    }
+                    if (getDecision() == biggestValueIndex) {
+                        correctPredictions++;
+                    }
+                    backpropagate(0);
+                }
+                applyChanges();
+            }
+            safeProgress(filePath);
+            System.out.println("Epoch: " + i + "; Average cost of epoch: " + sumOfCost.divide(BigDecimal.valueOf(totalNodes), RoundingMode.FLOOR) + "; Percentage correct: " + (double)correctPredictions / (double)data.size() * 100 + "%; Calculation time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
+
+            /*
             for (int j = 0; j < data.size(); j++) {
                 assignValues(data.get(j));
                 calculateValues();
@@ -180,10 +219,12 @@ public class AiBuilder {
                     correctPredictions++;
                 }
                 backpropagate(0);
-                applyChanges();
             }
+            applyChanges();
             safeProgress(filePath);
             System.out.println("Epoch: " + i + "; Average cost of epoch: " + sumOfCost.divide(BigDecimal.valueOf(totalNodes), RoundingMode.FLOOR) + "; Percentage correct: " + (double)correctPredictions / (double)data.size() * 100 + "%; Calculation time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
+
+             */
         }
     }
 
@@ -387,7 +428,7 @@ public class AiBuilder {
     }
 
     /**
-     * Methos that return the values of the output layer activation
+     * Method that return the values of the output layer activation
      *
      * @return the values of the output layer activation
      */

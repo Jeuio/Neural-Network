@@ -23,7 +23,7 @@ public class CostFunction {
     public static double[] derivativeCrossEntropy(Node[] outputNodes, double[] desiredValues) {
         double[] derivatives = new double[outputNodes.length];
         for (int i = 0; i < derivatives.length; i++) {
-            derivatives[i] = outputNodes[i].getActivation() - desiredValues[i];
+            derivatives[i] = (outputNodes[i].getActivation() - desiredValues[i]) / ((outputNodes[i].getActivation() * (1 - outputNodes[i].getActivation())) + 0.0000000000000000000000000000000000000001);
         }
         return derivatives;
     }
