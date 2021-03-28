@@ -10,6 +10,7 @@ import java.io.IOException;
 public class Draw extends JLabel {
 
     public static BufferedImage image;
+    public static String guess = "not guessed yet";
     private final int width;
     private final int height;
 
@@ -27,6 +28,7 @@ public class Draw extends JLabel {
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
 
         g2d.drawImage(image, 0, 0, width, height, null);
+        g2d.drawString(guess, 10, 10);
 
         repaint();
     }

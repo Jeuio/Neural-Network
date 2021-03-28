@@ -2,20 +2,33 @@ package AI.UserInput;
 
 import AI.GUI.Draw;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 
 public class ImageDrawer {
 
-    private final BufferedImage image;
+    private BufferedImage image;
+    private File imageFile;
 
-    public ImageDrawer(BufferedImage image) {
-        if (image.getWidth() != 28 || image.getHeight() != 28) {
-            this.image = resizeImage(image, 28, 28);
-        } else {
-            this.image = image;
+    public ImageDrawer(File imageFile) {
+        try {
+            this.image = ImageIO.read(imageFile);
+            this.imageFile = imageFile;
+            if (image.getWidth() != 28 || image.getHeight() != 28) {
+                this.image = resizeImage(image, 28, 28);
+            }
+            for (int i = 0; i < image.getWidth(); i++) {
+                for (int j = 0; j < image.getHeight(); j++) {
+                    image.setRGB(i, j, Color.WHITE.getRGB());
+                }
+            }
+            Draw.image = this.image;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        Draw.image = this.image;
     }
 
     public BufferedImage getImage() {
@@ -23,7 +36,11 @@ public class ImageDrawer {
     }
 
     public void draw(int x, int y) {
-        image.setRGB(x, y, Color.BLACK.getRGB());
+        try {
+            image.setRGB(x, y, Color.BLACK.getRGB());
+        } catch (ArrayIndexOutOfBoundsException e) {
+
+        }
     }
 
     private BufferedImage resizeImage(BufferedImage image, int width, int height) {

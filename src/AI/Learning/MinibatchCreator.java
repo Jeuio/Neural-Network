@@ -2,12 +2,21 @@ package AI.Learning;
 
 import java.util.ArrayList;
 
+/**
+ * This class handles the creating of mini batches
+ */
 public class MinibatchCreator {
 
-    private ArrayList<double[]> data;
-    private ArrayList<double[]> labels;
-    private Minibatch[] minibatches;
+    private ArrayList<double[]> data; //The data that should be distributed between the batches
+    private ArrayList<double[]> labels; //The labels that should be distributed between the batches
+    private Minibatch[] minibatches; //All the mini batches that have been created
 
+    /**
+     * This method tries to create mini batches of a specified size. When the sizes can't be met, it will try to distribute
+     * the remaining data evenly between the batches, so no data will be lost
+     *
+     * @param prefferedBatchSize the preferred size of the batches
+     */
     public void createMiniBatches(int prefferedBatchSize) {
         assert data.size() == labels.size() : "data size does not match label size";
         int dataSize = data.size();
@@ -38,41 +47,44 @@ public class MinibatchCreator {
             minibatch.setData(minibatchData);
             minibatch.setLabels(minibatchLabels);
 
-            /*
-            System.out.println("minibatch " + i);
-            for (int j = 0; j < minibatch.getData().size(); j++) {
-                System.out.println("dataset " + j);
-                for (int k = 0; k < minibatch.getData().get(j).length; k++) {
-                    System.out.println(minibatch.getData().get(j)[k]);
-                }
-                System.out.println("");
-            }
-            System.out.println("");
-
-             */
-
-
             this.minibatches[i] = minibatch;
         }
     }
 
+    /**
+     * @return the data this class is storing
+     */
     public ArrayList<double[]> getData() {
         return data;
     }
 
+    /**
+     * Sets the data this class should work with
+     * @param data the data this class should work with
+     */
     public void setData(ArrayList<double[]> data) {
         this.data = data;
     }
 
+    /**
+     * @return the labels this class is storing
+     */
     public ArrayList<double[]> getLabels() {
         return labels;
     }
 
+    /**
+     * Sets the labels this class should work with
+     * @param labels the labels this class should work with
+     */
     public void setLabels(ArrayList<double[]> labels) {
         this.labels = labels;
     }
 
+    /**
+     * @return the mini batches that have been created. Should only be invoked after createMiniBatches was invoked
+     */
     public Minibatch[] getMinibatches() {
-        return minibatches;
+        return this.minibatches;
     }
 }

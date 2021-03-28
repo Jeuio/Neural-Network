@@ -6,9 +6,16 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * This class is used to convert pictures into numeric data
+ */
 public class PictureToData {
 
-    //Static method that uses a picture to extract data
+    /**
+     * Extract numeric data from an image
+     * @param image the image
+     * @return the data
+     */
     public static float[] pictureToData(BufferedImage image) {
         float[] data = new float[image.getWidth() * image.getHeight()];
         //Iterates through all pixels in the image
@@ -21,7 +28,11 @@ public class PictureToData {
         return data;
     }
 
-    //Static method that uses a file to extract data
+    /**
+     * Extract numeric data from a file leading to an image
+     * @param file the file leading to an image
+     * @return the data
+     */
     public static float[] pictureToData(File file) throws IOException {
         BufferedImage image = ImageIO.read(file);
         float[] data = new float[image.getWidth() * image.getHeight()];
@@ -35,7 +46,11 @@ public class PictureToData {
         return data;
     }
 
-    //Static method that uses a filepath to extract data
+    /**
+     * Extract numeric data from a path of the file leading to an image
+     * @param filepath the path of the file leading to an image
+     * @return the data
+     */
     public static float[] pictureToData(String filepath) throws IOException {
         BufferedImage image = ImageIO.read(new File(filepath));
         float[] data = new float[image.getWidth() * image.getHeight()];
