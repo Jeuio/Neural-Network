@@ -34,6 +34,13 @@ public class AiBuilder {
     private CostFunctions costFunction; //The cost function of the network
     private final ArrayList<Layer> layers = new ArrayList<>(); //Stores the layers of the network
 
+
+    public int guess(double[] data) {
+        this.assignValues(data);
+        this.propagate();
+        return this.getDecision();
+    }
+
     /**
      * This method is used to build the neural network. It creates all nodes, weights, and biases and assigns all of them accordingly.
      * It also invokes the link method to connect all nodes and weights together

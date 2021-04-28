@@ -16,8 +16,8 @@ public class PictureToData {
      * @param image the image
      * @return the data
      */
-    public static float[] pictureToData(BufferedImage image) {
-        float[] data = new float[image.getWidth() * image.getHeight()];
+    public static double[] pictureToData(BufferedImage image) {
+        double[] data = new double[image.getWidth() * image.getHeight()];
         //Iterates through all pixels in the image
         for (int i = 0; i < image.getWidth(); i++) {
             for (int j = 0; j < image.getHeight(); j++) {

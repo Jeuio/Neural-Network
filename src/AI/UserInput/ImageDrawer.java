@@ -32,7 +32,7 @@ public class ImageDrawer {
     }
 
     public BufferedImage getImage() {
-        return image;
+        return resizeImage(this.image, 28, 28);
     }
 
     public void draw(int x, int y) {

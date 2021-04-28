@@ -1,10 +1,11 @@
-import AI.AiBuilder;
+import AI.*;
 import AI.Components.Layer;
 import AI.Cost.CostFunctions;
+import AI.GUI.Draw;
 import AI.GUI.GUI;
-import AI.LayerType;
-import AI.ActivationFunction;
-import AI.MNISTLoader;
+import AI.UserInput.ImageDrawer;
+import AI.UserInput.MouseListener;
+
 import java.io.FileNotFoundException;
 
 /**
@@ -33,6 +34,10 @@ public class Main {
         MNISTLoader loader = new MNISTLoader();
         loader.extract();
 
-        builder.learn(1000, 500, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
+        //builder.learn(1000, 500, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
+
+        while (true) {
+            Draw.guess = String.valueOf(builder.guess(PictureToData.pictureToData(MouseListener.imageDrawer.getImage())));
+        }
     }
 }
