@@ -18,15 +18,17 @@ public class Main {
         new GUI();
         AiBuilder builder = new AiBuilder();
         Layer inputLayer = new Layer(784, 0, ActivationFunction.NONE, LayerType.INPUT);
-        Layer hiddenLayer = new Layer(100, 1, ActivationFunction.SIGMOID, LayerType.HIDDEN);
-        Layer outputLayer = new Layer(10, 2, ActivationFunction.SOFTMAX, LayerType.OUTPUT);
+        Layer hiddenLayer = new Layer(20, 1, ActivationFunction.SIGMOID, LayerType.HIDDEN);
+        Layer hiddenLayer2 = new Layer(20, 2, ActivationFunction.SIGMOID, LayerType.HIDDEN);
+        Layer outputLayer = new Layer(10, 3, ActivationFunction.SOFTMAX, LayerType.OUTPUT);
 
         builder.addLayer(inputLayer);
         builder.addLayer(hiddenLayer);
+        builder.addLayer(hiddenLayer2);
         builder.addLayer(outputLayer);
 
         builder.setUseBias(true);
-        builder.setLearningRate(0.001f);
+        builder.setLearningRate(0.0001f);
         builder.setCostFunction(CostFunctions.CROSS_ENTROPY);
 
         builder.build();
@@ -34,7 +36,7 @@ public class Main {
         MNISTLoader loader = new MNISTLoader();
         loader.extract();
 
-        //builder.learn(1000, 500, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
+        builder.learn(1000, 500, "src\\AI\\Progress\\progress.txt", loader.getData(), loader.getLabels());
 
         while (true) {
             Draw.guess = String.valueOf(builder.guess(PictureToData.pictureToData(MouseListener.imageDrawer.getImage())));

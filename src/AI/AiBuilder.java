@@ -170,10 +170,15 @@ public class AiBuilder {
 
             long startTime = System.currentTimeMillis();
             int correctPredictions = 0;
+            long trainingExampleAmount = 0;
             BigDecimal sumOfCost = new BigDecimal(0);
 
             minibatchCreator.createMiniBatches(minibatchsize);
             Minibatch[] minibatches = minibatchCreator.getMinibatches();
+            for (Minibatch mb:
+                 minibatches) {
+                trainingExampleAmount += mb.getData().size();
+            }
             for (int j = 0; j < minibatches.length; j++) {
                 Minibatch minibatch = minibatches[j];
                 for (int k = 0; k < minibatch.getData().size(); k++) {
@@ -198,7 +203,7 @@ public class AiBuilder {
                 applyChanges();
             }
             checkSaving(filePath);
-            System.out.println("Epoch: " + i + "; Average cost of epoch: " + sumOfCost.divide(BigDecimal.valueOf(minibatches.length), RoundingMode.FLOOR) + "; Percentage correct: " + (double) correctPredictions / (double) data.size() * 100 + "%; Calculation time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
+            System.out.println("Epoch: " + i + "; Average cost of epoch: " + sumOfCost.divide(BigDecimal.valueOf(trainingExampleAmount), RoundingMode.FLOOR) + "; Percentage correct: " + (double) correctPredictions / (double) data.size() * 100 + "%; Calculation time: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
         }
     }
 
@@ -423,11 +428,11 @@ public class AiBuilder {
                     costSum += rightNode.getCost() * rightNodeWeights[leftNodeIndex].getValue();
                 }
                 if (this.layers.get(layer - 1).getActivationFunction() == ActivationFunction.SIGMOID) {
-                    cost *= MathFunctions.sigmoid(leftNode.getValue(), true);
+                    costSum *= MathFunctions.sigmoid(leftNode.getValue(), true);
                 } else if (this.layers.get(layer - 1).getActivationFunction() == ActivationFunction.SOFTMAX) {
-                    cost *= MathFunctions.softmax(leftNode.getIndexInLayer(), leftLayer.getNodes(), true); //Something might be wrong here
+                    costSum *= MathFunctions.softmax(leftNode.getIndexInLayer(), leftLayer.getNodes(), true); //Something might be wrong here
                 } else if (this.layers.get(layer - 1).getActivationFunction() == ActivationFunction.RELU) {
-                    cost *= MathFunctions.relu(leftNode.getActivation(), true);
+                    costSum *= MathFunctions.relu(leftNode.getActivation(), true);
                 }
                 leftNode.setCost(costSum);
             }
